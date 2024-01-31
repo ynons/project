@@ -1,0 +1,7 @@
+
+https://www.youtube.com/watch?v=h9gpufJFF-0//video about normalizing the data and using basic whigted avrage to predict user rating, 
+VERY HELPFUL!!!!!
+https://www.youtube.com/watch?v=e9U0QAFbfLI Cosine Similarity, finding
+ similuartys in data based on vector engles
+https://machinelearningmastery.com/using-singular-value-decomposition-to-build-a-recommender-system/
+recomendation systeams with SVD in python pandas
