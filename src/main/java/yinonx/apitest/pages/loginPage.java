@@ -22,6 +22,9 @@ public class loginPage extends VerticalLayout {
     private UserService userService;
 
     public loginPage(UserService userService) {
+
+             
+       
         this.userService = userService;
 
         add(new H1("log in"));
@@ -41,9 +44,10 @@ public class loginPage extends VerticalLayout {
     private void checkLogin(String username, String password){
        boolean res = userService.isUserExists(username, password);
        System.out.println(username+','+password);
-      if (res == true){
-        Notification.show("login succsful", 3000, Position.TOP_CENTER);
-        VaadinSession.getCurrent().getSession().setAttribute("username", username);  
+      if (res){
+        UI.getCurrent().getSession().setAttribute("username", username);
+        VaadinSession.getCurrent().getSession().setAttribute("username", username);
+        Notification.show("loginPage the currnt logged in user in coockies is " + (String)VaadinSession.getCurrent().getAttribute("username"));  
             UI.getCurrent().navigate(gamePage.class);
     }
       else{     

@@ -2,6 +2,7 @@ package yinonx.apitest.pages;
 
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -26,6 +27,10 @@ import yinonx.apitest.services.UserService;
 @Route(value = "/game")
 public class gamePage extends VerticalLayout {
 
+    private String loggedInUser =(String)UI.getCurrent().getSession().getAttribute("username");
+
+  
+  
     private UserService userService;
     private GamesService gamesService;
     private MatrixFactorization matrixFactorization;
@@ -37,50 +42,52 @@ public class gamePage extends VerticalLayout {
     private TextField gameReleaseDateTextField;
 
     public gamePage(GamesService gamesService, MatrixFactorization matrixFactorization, CsvService csvService,
-            UserService userService) {
+    UserService userService) {
+        Notification.show("the currnt logged in user is "+ (String)VaadinSession.getCurrent().getAttribute("username"));      
+
         this.gamesService = gamesService;
         this.matrixFactorization = matrixFactorization;
         this.userService = userService;
+        Notification.show("the currnt logged in user is "+ (String)VaadinSession.getCurrent().getAttribute("username"));      
+    
+        TabSheet gametabSheet = new TabSheet();// create a new tab sheet(the object to put tabs within)
+        this.getStyle().setAlignItems(AlignItems.CENTER);// set tab aligment ot be centered
 
-
-
-        TabSheet gametabSheet = new TabSheet();//create a new tab sheet(the object to put tabs within)
-        this.getStyle().setAlignItems(AlignItems.CENTER);//set tab aligment ot be centered
-        
-        //create all the bottons nececery
+        // create all the bottons nececery
         Button searchBotton = new Button("Search");
         Button addToPlayedGames = new Button("Add game to played list");
         Button factorizeButton = new Button("factorize");
 
-        //create all the labels and TextFileds to show info of games that are searchd
+        // create all the labels and TextFileds to show info of games that are searchd
         gameNameTextField = new TextField();
         gameRatingTextField = new TextField();
         gameReleaseDateTextField = new TextField();
-     
-                //set them as read only so they can be used as labels
+
+        // set them as read only so they can be used as labels
         gameReleaseDateTextField.setReadOnly(true);
         gameRatingTextField.setReadOnly(true);
         gameNameTextField.setReadOnly(true);
-                //create text compunents to put infront of the labels
+        // create text compunents to put infront of the labels
         Span gameNamelSpan = new Span("gameName = ");
         Span gameRatingSpan = new Span("gameRating = ");
         Span gameReleaseDateSpan = new Span("gameReleaseDate = ");
-         //set spacingfor the 
+        // set spacingfor the
         // gameReleaseDateSpan.getStyle().set("white-space", "pre-line");
-        
-        //activate the search button
+
+        // activate the search button
         searchBotton.addClickListener(e -> getGameDetails(inputTextField.getValue()));
         factorizeButton.addClickListener(e -> FactorizeMatrix());
         addToPlayedGames
-                .addClickListener(e -> AddGameToUser(inputTextField.getValue(), (gameTimeInputField.getValue())));
+                .addClickListener(e -> AddGameToUser(inputTextField.getValue(), gameTimeInputField.getValue(),
+                        loggedInUser));
         // Add a KeyDownListener to the TextField to trigger the search on Enter key press ass well
-        
 
         // //activate
-        // Registration enterListenerRegistration = inputTextField.addKeyDownListener(event -> {
-        //     if ("Enter".equals(()event.getKey())) {
-        //         getGameDetails(inputTextField.getValue());
-        //     }
+        // Registration enterListenerRegistration =
+        // inputTextField.addKeyDownListener(event -> {
+        // if ("Enter".equals(()event.getKey())) {
+        // getGameDetails(inputTextField.getValue());
+        // }
         // });
         add(gametabSheet);
 
@@ -92,17 +99,16 @@ public class gamePage extends VerticalLayout {
         gameGrid.addColumn(Game::getPlayTimeAsString).setHeader("playTime");
         gameGrid.addColumn(game -> game.getPlatforms() != null ? String.join(", ", game.getPlatforms()) : "")
                 .setHeader("Platforms");
-        
+
         gameGrid.addItemDoubleClickListener(event -> deleteGame(event.getItem().getName(),
-                (String) VaadinSession.getCurrent().getSession().getAttribute("username")));
-            //add double click ec=vent to acctivate deletaion of game
-       
-       
-            // Add components to the layout
-       //style compunents 
+                loggedInUser));
+        // add double click ec=vent to acctivate deletaion of game
+
+        // Add components to the layout
+        // style compunents
         inputTextField.getStyle().setPadding("20px");
         gameTimeInputField.getStyle().setPadding("20px");
-        
+
         new Div(new Text("here you can add games"));
         Div gameTabDiv = new Div(gameGrid, factorizeButton);
         Div yourGamesDiv2 = new Div(inputTextField, searchBotton);
@@ -121,73 +127,80 @@ public class gamePage extends VerticalLayout {
         gametabSheet.add("add Games", mainDiv);
         gametabSheet.setSizeFull();
 
-        populateGridWithUserGames();
-
-        // Clean up the KeyDownListener registration when the component is detached
+        populateGridWithUserGames(loggedInUser);
 
     }
 
-    private boolean AddGameToUser(String gameName, String playtimeString) {
-        Notification.show("adding game to user fdsafdsfasdfsafdsafsdfsdafsda");
+    private boolean AddGameToUser(String gameName, String playtimeString, String userName) {
         int playtime = 0;
         User currentuser = null;
         Game currntGame = null;
 
-        try {
-            playtime = Integer.parseInt(playtimeString);
-        } catch (Exception e) {
-            System.out.println(e);
-            Notification.show("please enter a valid playtime");
-        }
-        if (playtime == 0 || playtime < 1) {
-            Notification.show("please enter a valid playtime");
+        if (!isValidPlaytime(playtimeString)) {
+            Notification.show("invalid Play time");
             return false;
         }
-
-        if (gameName == null || gameName.isEmpty()) {
-            Notification.show("please enter a valid game name");
+        if (!isValidGameName(gameName)) {
+           
+            Notification.show("invalid game name");
             return false;
         }
-        String sesionName = "";
+        
         try {
-            sesionName = (String) VaadinSession.getCurrent().getSession().getAttribute("username");
+            currentuser = userService.findUserByUn(userName);
+            
 
         } catch (Exception e) {
-        }
-        System.out.println("gamePage.addGameToUser: Stored Username: " + sesionName);
-        try {
-            currentuser = userService.findUserByUn(sesionName);
-            System.out.println("gamePage.addGameToUser: the user " + currentuser.getUn() + " been found");
-
-        } catch (Exception e) {
-            System.out.println("gamePage.addGameToUser: the user has not been found");
+            
+            Notification.show("User is not in the data base");
             return false;
         }
-
-        System.out.println("---------" + VaadinSession.getCurrent().getSession().getAttribute("username"));
         try {
             currntGame = gamesService.getGameDetailsByName(gameName);
             currntGame.setPlayTime(playtime);
         } catch (Exception e) {
-            System.out.println("gamePage.addGameToUser: game had not been found");
+            
+            Notification.show("game is not in the APIs dtabase");
             return false;
         }
         try {
             currentuser.addGame(currntGame);
             userService.UpdateUser(currentuser);
-          
+
         } catch (Exception e) {
-            System.out.println("\n" + e);
-            System.out.println("the adding of the game has failed");
+            Notification.show("couldent add game to user");
             return false;
         }
         Notification.show("the game " + currntGame.getName() + "was added to the user" + currentuser.getUn()
-        + "played games list");
-System.out.println("the game " + currntGame.getName() + "was added to the user" + currentuser.getUn()
-        + "played games list");
-        populateGridWithUserGames();
+                + "played games list");
+        populateGridWithUserGames(userName);
         clearComponentes();
         return true;
+    }
+
+    private boolean isValidGameName(String name) {
+        if (name == null || name.isEmpty()) {
+            Notification.show("please enter a valid game name");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean isValidPlaytime(String stringPlaytime) {
+        int playtime;
+        try {
+            playtime = Integer.parseInt(stringPlaytime);
+        } catch (Exception e) {
+            System.out.println(e);
+            Notification.show("please enter a valid playtime");
+            return false;
+        }
+        if (playtime == 0 || playtime < 1) {
+            Notification.show("please enter a valid playtime");
+            return false;
+        }
+        return true;
+
     }
 
     private void clearComponentes() {
@@ -215,7 +228,7 @@ System.out.println("the game " + currntGame.getName() + "was added to the user" 
             System.out.println("debuggin in gamePage.deleteGame. the game to delete is:" + game
                     + "and the list to delete t from is:" + user.getPlayedGames());
             Notification.show("game by the name " + game.getName() + ") DELETED successfuly.");
-            populateGridWithUserGames();
+            populateGridWithUserGames(userName);
         });
         dialog.open();
     }
@@ -227,7 +240,7 @@ System.out.println("the game " + currntGame.getName() + "was added to the user" 
     }
 
     public void getGameDetails(String name) {
-       Game currentGame = gamesService.getGameDetailsByName(name);
+        Game currentGame = gamesService.getGameDetailsByName(name);
         showGameDetails(currentGame);
     }
 
@@ -239,28 +252,21 @@ System.out.println("the game " + currntGame.getName() + "was added to the user" 
         }
     }
 
-
-    private void populateGridWithUserGames() {
+    private boolean populateGridWithUserGames(String userName) {
         User currentUser = null;
-        String curUserName = "";
+
         try {
-            curUserName = (String)VaadinSession.getCurrent().getAttribute("username");
+            currentUser = userService.findUserByUn(loggedInUser);
         } catch (Exception e) {
-            Notification.show(" exeption::the user trying to populate the grid with is"+ curUserName);
-            return;
+            return false;
         }
-         currentUser = userService.findUserByUn(curUserName);
-        gameGrid.setItems();
-     if (currentUser != null) {;
-            if (currentUser.getPlayedGames() != null) {
-                // Clear the existing items in the grid
-                System.out.println("gamePage.populateGridWithUserGames: the game list is not empty");
-                // Set the items in the grid based on the user's played games
-                gameGrid.setItems(currentUser.getPlayedGames());
-            } else {
-                // Handle the case where the user or played games list is null
-                Notification.show("gamePage.populateGridWithUserGames:User is not logged in or played games list is null");
-            }
+
+        if (currentUser.getPlayedGames() == null) {
+            return false;
+        } else {
+            gameGrid.setItems(currentUser.getPlayedGames());
         }
+        return true;
     }
+
 }

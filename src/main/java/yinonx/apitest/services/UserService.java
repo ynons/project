@@ -26,14 +26,16 @@ public class UserService
    }
 
    
-   public void addUser(User user)
+   public boolean addUser(User user)
    {
       try {
          userRepo.insert(user);
        }
        catch(Exception e) {
          System.out.println(e+"could not insert user");
+         return false;
        } 
+       return true;
    }
    public void UpdateUser(User currntUser)
    {
