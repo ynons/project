@@ -1,0 +1,13 @@
+https://www.kaggle.com/code/wikhung/implicit-cf-tensorflow-implementation/notebook
+bulding a CF matrix factorization system based on the steam data set
+
+https://www.kaggle.com/code/jwyang91/steam-game-recommender
+matrix factorztion reco sys based on the above work
+
+https://www.kaggle.com/code/pabloherber/recommender-only-for-true-gamers
+cosine simulrity based on scale of time dedicated for video games
+
+https://www.kaggle.com/code/jonathanbouchet/pc-master-race#system-recommender
+simuler to the above
+
+    

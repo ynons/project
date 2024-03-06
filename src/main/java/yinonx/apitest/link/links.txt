@@ -5,3 +5,25 @@ https://www.youtube.com/watch?v=e9U0QAFbfLI Cosine Similarity, finding
  similuartys in data based on vector engles
 https://machinelearningmastery.com/using-singular-value-decomposition-to-build-a-recommender-system/
 recomendation systeams with SVD in python pandas
+https://analyticsindiamag.com/singular-value-decomposition-svd-application-recommender-system/
+//svd explained
+https://towardsdatascience.com/prototyping-a-recommender-system-step-by-step-part-2-alternating-least-square-als-matrix-4a76c58714a1
+
+https://towardsdatascience.com/recommendation-system-matrix-factorization-svd-explained-c9a50d93e488
+Matrix Factorization — Singular Value Decomposition (SVD) Explained
+
+https://www.researchgate.net/publication/330249306_Estimated_Rating_Based_on_Hours_Played_for_Video_Game_Recommendation
+reserch paper on using playtime as the matric for the setisfction of a user from a game, the reserch seams 
+to support this approch as a valid strategy for predicting user "rating" for a given game
+
+https://analyticsindiamag.com/singular-value-decomposition-svd-application-recommender-system/
+Singular Value Decomposition (SVD) & Its Application In Recommender System
+
+https://www.kaggle.com/code/nikatomashvili/recommendation-system-hybrid/input?select=merged_data.csv
+steam games data set with more detailes about the game, inculds price and iverall reviews 
+
+https://towardsdatascience.com/recommender-systems-in-python-from-scratch-643c8fc4f704
+matrix factorztion explain thorouly!!!
+
+https://www.youtube.com/watch?v=qlyTyNRERoE
+gredint decent in matrix factoztion 

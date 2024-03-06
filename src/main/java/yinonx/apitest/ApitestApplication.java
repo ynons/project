@@ -10,8 +10,5 @@ public class ApitestApplication {
 		SpringApplication.run(ApitestApplication.class, args);
 	}																	
 
-	// @Bean
-    // public RestTemplate restTemplate() {
-    //     return new RestTemplate();
-    // }
+	
 }
