@@ -1,12 +1,15 @@
 package yinonx.apitest.pages;
 
+import com.helger.commons.annotation.PrivateAPI;
 import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
+import com.vaadin.flow.component.grid.ColumnRendering;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -28,9 +31,7 @@ import yinonx.apitest.services.UserService;
 public class gamePage extends VerticalLayout {
 
     private String loggedInUser =(String)UI.getCurrent().getSession().getAttribute("username");
-
-  
-  
+    private Grid<Game> recommendedGameGrid = new Grid<>();
     private UserService userService;
     private GamesService gamesService;
     private MatrixFactorization matrixFactorization;
@@ -90,8 +91,16 @@ public class gamePage extends VerticalLayout {
         // }
         // });
         add(gametabSheet);
+              // Configure the grid for recommended games
+        recommendedGameGrid.addColumn(Game::getName).setHeader("Name");
+        recommendedGameGrid.addComponentColumn(game -> {
+            Image image = new Image(game.getCoverImageLink(), "Cover Image");
+            image.setHeight("50px"); // Set the height as needed
+            image.setWidth("50px"); // Set the width as needed
+            return image;
+        }).setHeader("Cover Image");
 
-        // Configure the grid
+        // Configure the grid for played games
         // add all the neccecery colomns
         gameGrid.addColumn(Game::getName).setHeader("Name");
         gameGrid.addColumn(Game::getReleaseDate).setHeader("Release Date");
@@ -118,12 +127,23 @@ public class gamePage extends VerticalLayout {
         Div span2 = new Div(gameRatingSpan, gameRatingTextField);
         Div span3 = new Div(gameReleaseDateSpan, gameReleaseDateTextField);
         span1.add();
+        recommendedGameGrid.addItemDoubleClickListener(event->{
+            AddGameToUser(event.getItem().getName(), "1" ,loggedInUser);
+        
+        });
+        recommendedGameGrid.setColumnRendering(ColumnRendering.EAGER);
+        recommendedGameGrid.setItems(userService.findUserByUn("yinon").getGames());
+
+        
 
         Div newDiv = new Div(span1, span2, span3);
+        Div recoDiv = new Div(recommendedGameGrid);
 
         Div mainDiv = new Div(yourGamesDiv1, yourGamesDiv2, newDiv);
         gametabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_CENTERED);
         gametabSheet.add("your Games", gameTabDiv);
+        gametabSheet.add("reccomended games",recoDiv);
+       
         gametabSheet.add("add Games", mainDiv);
         gametabSheet.setSizeFull();
 

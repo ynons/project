@@ -19,6 +19,7 @@ import yinonx.apitest.services.UserService;
 
 import yinonx.apitest.classes.User;
 
+import java.util.Random;
 import java.util.stream.Stream;
 
 @Route(value = "/register")
@@ -87,10 +88,11 @@ public class RegistrationPage extends VerticalLayout {
         {
             if(passward.equals(confirmPassward))
             {
-                
+            
                     User user = new User();
                     user.setUn(userName);
                     user.setPw(passward);
+                    user.setId(generateRandomLong());
                     if (userService.addUser(user)){
                     UI.getCurrent().getSession().setAttribute("username", userName);
                     UI.getCurrent().navigate(gamePage.class);
@@ -101,7 +103,32 @@ public class RegistrationPage extends VerticalLayout {
 
         
     }
+   //recursive, may not work as data gets bigger
+    // public long generateRandomLong() {
+    //     // Create an instance of the Random class
+    //     Random random = new Random();
 
+    //     // Generate a random long using nextLong() method
+    //     long randomLong = random.nextLong();
+    //    if( userService.findUserById(randomLong) == null)
+    //    {
+    //     return randomLong;
+    //    }
+    //    randomLong = generateRandomLong();
+    //    return randomLong;
+       
+    // }
+    public long generateRandomLong() {
+        Random random = new Random();
+        long randomLong;
+    
+        do {
+            randomLong = random.nextLong();
+        } while (userService.findUserById(randomLong) != null);
+    
+        return randomLong;
+    }
+    
     public PasswordField getPasswordField() {
         return password;
     }
