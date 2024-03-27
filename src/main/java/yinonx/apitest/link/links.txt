@@ -27,3 +27,9 @@ matrix factorztion explain thorouly!!!
 
 https://www.youtube.com/watch?v=qlyTyNRERoE
 gredint decent in matrix factoztion 
+
+https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea
+super detailed python imp of both als and sgd
+
+https://www.youtube.com/watch?v=qlyTyNRERoE
+youtube about the math behind the techniche 

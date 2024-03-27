@@ -44,8 +44,7 @@ public class gamePage extends VerticalLayout {
 
     public gamePage(GamesService gamesService, MatrixFactorization matrixFactorization, CsvService csvService,
     UserService userService) {
-        Notification.show("the currnt logged in user is "+ (String)VaadinSession.getCurrent().getAttribute("username"));      
-
+      
         this.gamesService = gamesService;
         this.matrixFactorization = matrixFactorization;
         this.userService = userService;
@@ -57,7 +56,7 @@ public class gamePage extends VerticalLayout {
         // create all the bottons nececery
         Button searchBotton = new Button("Search");
         Button addToPlayedGames = new Button("Add game to played list");
-        Button factorizeButton = new Button("factorize");
+     //   Button factorizeButton = new Button("factorize");
 
         // create all the labels and TextFileds to show info of games that are searchd
         gameNameTextField = new TextField();
@@ -76,12 +75,12 @@ public class gamePage extends VerticalLayout {
         // gameReleaseDateSpan.getStyle().set("white-space", "pre-line");
 
         // activate the search button
-        searchBotton.addClickListener(e -> getGameDetails(inputTextField.getValue()));
-        factorizeButton.addClickListener(e -> FactorizeMatrix());
-        addToPlayedGames
-                .addClickListener(e -> AddGameToUser(inputTextField.getValue(), gameTimeInputField.getValue(),
-                        loggedInUser));
-        // Add a KeyDownListener to the TextField to trigger the search on Enter key press ass well
+        searchBotton.addClickListener(e -> matrixFactorization.getMatrixFromCsv());
+        // factorizeButton.addClickListener(e -> FactorizeMatrix());
+        // addToPlayedGames
+        //         .addClickListener(e -> AddGameToUser(inputTextField.getValue(), gameTimeInputField.getValue(),
+        //                 loggedInUser));
+        // // Add a KeyDownListener to the TextField to trigger the search on Enter key press ass well
 
         // //activate
         // Registration enterListenerRegistration =
@@ -119,7 +118,7 @@ public class gamePage extends VerticalLayout {
         gameTimeInputField.getStyle().setPadding("20px");
 
         new Div(new Text("here you can add games"));
-        Div gameTabDiv = new Div(gameGrid, factorizeButton);
+        Div gameTabDiv = new Div(gameGrid);
         Div yourGamesDiv2 = new Div(inputTextField, searchBotton);
         Div yourGamesDiv1 = new Div(gameTimeInputField, addToPlayedGames);
 
@@ -141,7 +140,7 @@ public class gamePage extends VerticalLayout {
 
         Div mainDiv = new Div(yourGamesDiv1, yourGamesDiv2, newDiv);
         gametabSheet.addThemeVariants(TabSheetVariant.LUMO_TABS_CENTERED);
-        gametabSheet.add("your Games", gameTabDiv);
+        gametabSheet.add("played Games", gameTabDiv);
         gametabSheet.add("reccomended games",recoDiv);
        
         gametabSheet.add("add Games", mainDiv);
@@ -172,7 +171,7 @@ public class gamePage extends VerticalLayout {
 
         } catch (Exception e) {
             
-            Notification.show("User is not in the data base");
+            Notification.show("User is not in the data base, try to login again");
             return false;
         }
         try {
@@ -188,10 +187,10 @@ public class gamePage extends VerticalLayout {
             userService.UpdateUser(currentuser);
 
         } catch (Exception e) {
-            Notification.show("couldent add game to user");
+            Notification.show("couldent add game to user, please try again");
             return false;
         }
-        Notification.show("the game " + currntGame.getName() + "was added to the user" + currentuser.getUn()
+        Notification.show("the game " + currntGame.getName() + " was added to the user " + currentuser.getUn()
                 + "played games list");
         populateGridWithUserGames(userName);
         clearComponentes();
@@ -231,7 +230,7 @@ public class gamePage extends VerticalLayout {
     private void deleteGame(String game1, String userName) {
         Game game = gamesService.getGameDetailsByName(game1);
         Notification.show(game + "");
-        System.out.println("the gamerecived from the click listener " + game);
+        System.out.println("the game recived from the click listener " + game);
         User user = userService.findUserByUn(userName);
         System.out.println("NFSDJKNF WDAJKFNJNSD JK+++++++++++++++FHKJFIDFHSADHFODS");
         ConfirmDialog dialog = new ConfirmDialog();
@@ -247,7 +246,7 @@ public class gamePage extends VerticalLayout {
             userService.UpdateUser(user);
             System.out.println("debuggin in gamePage.deleteGame. the game to delete is:" + game
                     + "and the list to delete t from is:" + user.getPlayedGames());
-            Notification.show("game by the name " + game.getName() + ") DELETED successfuly.");
+            Notification.show("game by the name " + game.getName() + " DELETED successfuly.");
             populateGridWithUserGames(userName);
         });
         dialog.open();

@@ -51,12 +51,12 @@ public class RegistrationPage extends VerticalLayout {
 
         title = new H3("Signup form");
         title.getStyle().setPadding("20px");
-        userName = new TextField("First name");
-        userName = new TextField("Last name");
+        
+        userName = new TextField("User name");
 
         userName.getStyle().setPadding("5px");
 
-        allowMarketing = new Checkbox("Allow Marketing Emails?");
+        allowMarketing = new Checkbox("useless checkbox?");
         allowMarketing.getStyle().set("margin-top", "10px");
 
         password = new PasswordField("Password");
@@ -88,7 +88,7 @@ public class RegistrationPage extends VerticalLayout {
         {
             if(passward.equals(confirmPassward))
             {
-            
+
                     User user = new User();
                     user.setUn(userName);
                     user.setPw(passward);

@@ -14,9 +14,9 @@ import com.opencsv.exceptions.CsvException;
 @Service
 public class CsvService {
     private double[][] matrix;
-    private String csvFilePath = "src\\main\\java\\yinonx\\apitest\\matrixTest\\CSV's\\Modified.csv";
-    private int numRowsToProcess = 4;
-    private int numColsToProcess = 10; // Default value, -1 means process all columns
+    private String csvFilePath = "src\\main\\java\\yinonx\\apitest\\CSV's\\movie _ratings.csv";
+    private int numRowsToProcess = 100;
+    private int numColsToProcess = 100; // Default value, -1 means process all columns
 
     public CsvService() {
     }

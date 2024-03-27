@@ -47,7 +47,7 @@ public class loginPage extends VerticalLayout {
       if (res){
         UI.getCurrent().getSession().setAttribute("username", username);
         VaadinSession.getCurrent().getSession().setAttribute("username", username);
-        Notification.show("loginPage the currnt logged in user in coockies is " + (String)VaadinSession.getCurrent().getAttribute("username"));  
+       // Notification.show("loginPage the currnt logged in user in coockies is " + (String)VaadinSession.getCurrent().getAttribute("username"));  
             UI.getCurrent().navigate(gamePage.class);
     }
       else{     

@@ -12,7 +12,15 @@ public class User {
 @Id
 private long id;
 private List<Game> playedGames;
-private List<Game> Games;
+private List<Game> interastingGames;
+public List<Game> getInterastingGames() {
+    return interastingGames;
+}
+
+public void setInterastingGames(List<Game> interastingGames) {
+    this.interastingGames = interastingGames;
+}
+
 public List<Game> getPlayedGames() {
     return playedGames;
 }

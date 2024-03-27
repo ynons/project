@@ -1,7 +1,8 @@
 package yinonx.apitest.matrixTest;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
-
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
@@ -11,10 +12,16 @@ import org.springframework.stereotype.Service;
 
 import yinonx.apitest.services.CsvService;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+
 @Service
 public class MatrixFactorization {
 
     private CsvService csvService;
+
 
     public MatrixFactorization(CsvService csvService) {
         this.csvService = csvService;
@@ -24,75 +31,187 @@ public class MatrixFactorization {
     public void getMatrixFromCsv() {
         int minValue = 0;
         int maxValue = 1;
-        int numFactors = 5;
+        int numFactors = 100;
+        int numberOfSteps = 9000;
+        int numOfEpochs = 10;
+        double RegularizationTerm = 0.01;
+        double rateOflernigng = 0.00000001;
         // get the matrix from the CSV file
         // double[][] matrix = csvService.getMatrix();
-        double[][] matrix = {
-                { 0.725, 0.392, 0.864, 0.123 },
-                { 0.543, 0.987, 0.654, 0.321 },
-                { 0.234, 0.567, 0.890, 0.432 },
-                { 0.901, 0.345, 0.678, 0.987 },
-        };
+        double[][] matrix = csvService.getMatrix();
 
-        System.out.println("the matrix from the CSV");
-        csvService.printMatrix(matrix);
-        RealMatrix userMatrix = initializeRealMatrix(matrix[0].length, numFactors, minValue, maxValue);
-        RealMatrix itemMatrix = initializeRealMatrix(numFactors, matrix.length, minValue, maxValue);
-    //    System.out.println("the item matrix is \n");
-    //    csvService.printRealMatrix(itemMatrix);
-    //    System.out.println("the user matrix is \n");
-    //    csvService.printRealMatrix(userMatrix);
-        matrixFactorization(matrix, convertToDoubleArray(userMatrix), convertToDoubleArray(itemMatrix), numFactors);
-        System.out.println("the factorized matrix is\n");
-        System.out.println(matrix);
+        // System.out.println("the matrix R");
+        // csvService.printMatrix(matrix);
+        // System.out.println("the predicted matrix:");
+        double[][] predictedMatrix = matrixFactorization(matrix, numFactors, minValue, maxValue, numberOfSteps,numOfEpochs, numFactors, RegularizationTerm, rateOflernigng);
+        // System.out.println("the predicted matrix:");
+        // printMatrix(predictedMatrix);
+        // System.out.println("the original matrix:");
+        // printMatrix(matrix);
+        // matrixFactorization(matrix, numFactors, 1, 10, 500);
     }
 
-    // private static void matrixFactorization(double[][] R, double[][] P, double[][] Q, int K) {
-    //     int steps = 5000; // Maximum number of steps
-    //     double alpha = 0.0002; // Learning rate
-    //     double beta = 0.02; // Regularization parameter
+    public static void printMatrix(double[][] matrix) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                System.out.print(matrix[i][j] + "\t");
+            }
+            System.out.println();
+        }
+    }
+    //my matrix factorization function. all the rest are used as refrence
 
-    //     for (int step = 0; step < steps; step++) {
-    //         for (int i = 0; i < R.length; i++) {
-    //             for (int j = 0; j < R[0].length; j++) {
-    //                 if (R[i][j] > 0) {
-    //                     double eij = R[i][j] - dotProduct(P[i], Q[j]);
-    //                     for (int k = 0; k < K; k++) {
-    //                         P[i][k] = P[i][k] + alpha * (2 * eij * Q[j][k] - beta * P[i][k]);
-    //                         Q[j][k] = Q[j][k] + alpha * (2 * eij * P[i][k] - beta * Q[j][k]);
-    //                     }
-    //                 }
-    //             }
-    //         }
+    private double[][] matrixFactorization(double[][] matrix, int numFactors, int minValue, int maxValue, int steps,
+            int epochs, int numOfFactors, double regTerm, double learningRate) {
+        // intililze two random matrices in the appropriate size
+        double[][] userMatrix = initializeMatrix(matrix[0].length, numFactors, minValue, maxValue);
+        double[][] itemMatrix = initializeMatrix(numFactors, matrix.length, minValue, maxValue);
+        // set error to max value so that it will enter the loop on first go
+        // create a list to store all errors in. will be turned into a grpah later, use
+        // to evaluate the
+        // working of the model
+        double error = Double.MAX_VALUE;
+        List<Double> doubleList = new ArrayList<>();
+        double errorSum = 0;
 
-    //         // Calculate error and check for convergence
-    //         double error = calculateError(R, P, Q, beta);
-    //         if (error < 0.001) {
-    //             break;
-    //         }
-    //     }
+        // loop over the original matrix times that are specfied in the dunction
+        // parameters(aka steps)
+        for (int step = 0; step < steps; step++) {
+            // debug: print the number of step being done
+            System.out.println("step : " + step);
+
+            // loop over each cell in the matrix R (og matrix)
+            for (int i = 0; i < matrix.length; i++) {
+                for (int j = 0; j < matrix[i].length; j++) {
+                    // go over all non zero enteris
+                    // if there is an entery in matrix R aka if user has played that game
+                    if (matrix[i][j] != 0) {
+                        // get the prediction of the currnt cell
+                        double dotProduct = dotProduct(getRowOfMtrix(userMatrix, i), getColomnOFMatrix(itemMatrix, j));
+                        // calculate the mean squared error of the prediction reletive to the actual
+                        // value
+                        error = Math.pow(matrix[i][j] - dotProduct, 2);
+
+                        // for each k value in the matrices U and V
+                        for (int k = 0; k < numFactors; k++) {
+                            // update the k values in the matrices U and V according to the error
+
+                            double Ustep = -2 * ((matrix[i][j] - dotProduct) * (itemMatrix[i][k]));
+                            Ustep = flipSign(Ustep);
+                            userMatrix[i][k] += Ustep * learningRate;
+                            double Istep = -2 * ((matrix[i][j] - dotProduct) * (userMatrix[k][j]));
+                            Istep = flipSign(Istep);
+                            itemMatrix[j][k] += Istep * learningRate;
+                            //System.out.println("the steps taken are: " + Istep * learningRate + " and " + learningRate * Ustep);
+                        }
+
+                    }
+                }
+
+            }
+            int errorCount=0;
+            double e = 0;
+            for (int x = 0; x < matrix.length; x++) {
+                for (int y = 0; y < matrix[0].length; y++) {
+                    if (matrix[x][y] > 0) {
+                        errorCount++;
+                        e += Math.pow(matrix[x][y]- dotProduct(getColomnOFMatrix(userMatrix, x), getRowOfMtrix(itemMatrix, y)),2);
+                    }
+                }
+            }
+            e=e/errorCount;
+            e=Math.sqrt(e);
+            doubleList.add(e);
+            System.out.println("the error is: " + e+"\n and the step is :" + step) ;
+            if (e < 0.1) {
+                System.out.println("error has reaced a minimum value of: " + e);
+                System.out.println("and it took " + step + " itarations to reach this value");
+                break;
+            }
+
+        }
+        //
+        // double [][]eR = multiplyMatrices(userMatrix, itemMatrix);
+
+        //
+
+        String csvName = "data.csv";
+        String directory = "C:\\Users\\ynon\\Documents\\testing";
+        writeToCSV(doubleList, directory, csvName);
+
+        // Print the resulting matrices
+        // System.out.println("the item matrix came out to :");
+        // printMatrix(itemMatrix);
+        // System.out.println("the user matrix came out to :");
+        // printMatrix(userMatrix);
+        // // System.out.println("the predicted R came out too");
+        return predictR(userMatrix, itemMatrix);
+    }
+
+    public double flipSign(double number) {
+        return -number;
+    }
+
+    private double sloape(double error) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'sloape'");
+    }
+
+    private double[] getRowOfMtrix(double[][] u, int row) {
+        double[] firstRow = u[row];
+        return firstRow;
+    }
+
+    private double[] getColomnOFMatrix(double[][] u, int colomn) {
+        int numRows = u.length;
+        double[] Column = new double[numRows];
+        for (int i = 0; i < numRows; i++) {
+            Column[i] = u[i][colomn];
+        }
+        return Column;
+    }
+
+    private double predictRating(double[] userMatrix, double[] itemMatrix) {
+        if (userMatrix.length != itemMatrix.length) {
+            return -1;
+        }
+
+        double predictRating = 0;
+        for (int i = 0; i < itemMatrix.length; i++) {
+            predictRating = predictRating + userMatrix[i] * itemMatrix[i];
+        }
+        return predictRating;
+    }
+
+    // // Calculate error and check for convergence
+    // double error = calculateError(R, P, Q, beta);
+    // if (error < 0.001) {
+    // break;
     // }
-    private static void matrixFactorization(double[][] R, double[][] P, double[][] Q, int K) {
-       
+    // }
+    // }
+    private void matrixFactorization(double[][] R, double[][] P, double[][] Q, int K) {
+
         int steps = 5000; // Maximum number of steps allowd for the algorithem,
         double alpha = 0.0002; // Learning rate, the size of steps taken for twiking the wights
         double beta = 0.02; // Regularization parameter, use to prevent over fitting, higher = less fitting
-        int h =0;
+        int h = 0;
 
         for (int step = 0; step < steps; step++) {
-            System.out.println("factorizing matrix step: "+ step+"out of "+ steps);
+            System.out.println("factorizing matrix step: " + step + "out of " + steps);
             for (int i = 0; i < R.length; i++) {
-                System.out.println("intirating over matrix R row number "+i);
+                System.out.println("intirating over matrix R row number " + i);
                 for (int j = 0; j < R[0].length; j++) {
-                    System.out.println("itirating over matrix R colomn number"+j);
+                    System.out.println("itirating over matrix R colomn number" + j);
                     if (R[i][j] > 0) {
-                        System.out.println("found a value that is not missign") ;
-                        //error in [i][j]
+                        System.out.println("found a value that is not missign");
+                        // error in [i][j]
                         double eij = R[i][j] - dotProduct(P[i], Q[j]);
                         System.out.println("caculated the error for place I J ");
                         for (int k = 0; k < K; k++) {
-                            System.out.println("updating wight time " +h);
+                            System.out.println("updating wight time " + h);
                             h++;
+                            System.out.print("step size is " + P[i][k] + alpha * (2 * eij * Q[j][k] - beta * P[i][k]));
                             P[i][k] = P[i][k] + alpha * (2 * eij * Q[j][k] - beta * P[i][k]);
                             Q[j][k] = Q[j][k] + alpha * (2 * eij * P[i][k] - beta * Q[j][k]);
                         }
@@ -107,8 +226,66 @@ public class MatrixFactorization {
             }
         }
     }
-    //of whole matrix
-    private static double calculateError(double[][] R, double[][] P, double[][] Q, double beta) {
+
+    private double getError(double actual, double predicted) {
+        return Math.pow(actual - predicted, 2);
+    }
+
+    public double[][] predictR(double[][] U, double[][] P) {
+        int numUsers = U.length;
+        int numItems = P[0].length;
+        double[][] predictedR = new double[numUsers][numItems];
+
+        // Perform dot product of matrices U and P
+        for (int i = 0; i < numUsers; i++) {
+            for (int j = 0; j < numItems; j++) {
+                predictedR[i][j] = dotProduct(U[i], P[j]);
+            }
+        }
+
+        return predictedR;
+    }
+
+    public void writeToCSV(List<Double> dataList, String directory, String fileName) {
+        FileWriter fileWriter = null;
+
+        try {
+            // Create the directory if it doesn't exist
+            Path path = Paths.get(directory);
+            if (!path.toFile().exists()) {
+                path.toFile().mkdirs();
+            }
+
+            // Create the file within the specified directory
+            fileWriter = new FileWriter(Paths.get(directory, fileName).toString());
+
+            // Write data to the CSV file
+            for (Double data : dataList) {
+                fileWriter.append(String.valueOf(data));
+                fileWriter.append(",");
+            }
+
+            // Add a new line character after each row
+            fileWriter.append("\n");
+
+            System.out.println("CSV file has been created successfully!");
+
+        } catch (IOException e) {
+            System.out.println("Error in writing CSV file: " + e.getMessage());
+        } finally {
+            try {
+                if (fileWriter != null) {
+                    fileWriter.flush();
+                    fileWriter.close();
+                }
+            } catch (IOException e) {
+                System.out.println("Error while closing file writer: " + e.getMessage());
+            }
+        }
+    }
+
+    // of whole matrix
+    private double calculateError(double[][] R, double[][] P, double[][] Q, double beta) {
         double error = 0;
         for (int i = 0; i < R.length; i++) {
             for (int j = 0; j < R[0].length; j++) {
@@ -124,54 +301,33 @@ public class MatrixFactorization {
         return error;
     }
 
-    private static double dotProduct(double[] a, double[] b) {
+    private double dotProduct(double[] a, double[] b) {
         double result = 0;
-        for (int i = 0; i < a.length-1; i++) {
+        for (int i = 0; i < a.length; i++) {
             result += a[i] * b[i];
         }
         return result;
     }
 
     // populate a matrix with random values according to provided parameters
-    private static double[][] initializeMatrix(int numRows, int numCols, double minValue, double maxValue) {
+
+    private double[][] initializeMatrix(int numRows, int numCols, int minValue, int maxValue) {
         double[][] matrix = new double[numRows][numCols];
         Random random = new Random();
-        double range = maxValue - minValue;
+        int range = maxValue - minValue;
         for (int i = 0; i < numRows; i++) {
             for (int j = 0; j < numCols; j++) {
-                matrix[i][j] = random.nextDouble() * range + minValue;
+                matrix[i][j] = random.nextInt(range) + minValue;
             }
         }
         return matrix;
-    }
-
-    public void gredientDecent(double[][] user, double[][] item, double[][] predictedMatrix, double[][] original) {
-        int y = 1;
-        int x = 1;
-        double lerningRate = 0.01;
-        double error = Double.MAX_VALUE;
-        double prevError = 0;
-
-        for (int i = 0; i < 1000; i++) {
-            prevError = error;
-            error = calculateRMSE(predictedMatrix[x][y], original[x][y]);
-            System.out.println("the RMSE for cycle number: " + i + " is: " + error + "\n");
-            if (error < prevError) {
-                System.out.println("\n");
-                updateWights(user, item, error, lerningRate);
-            }
-            // else
-            // {
-            // break;
-            // }
-        }
     }
 
     private void updateWights(double[][] user, double[][] item, double error, double lerningRate) {
 
     }
 
-    public static double calculateRMSE(double actual, double predicted) {
+    public double calculateRMSE(double actual, double predicted) {
         // Calculate the squared error
         double squaredError = Math.pow(actual - predicted, 2);
 
@@ -179,7 +335,7 @@ public class MatrixFactorization {
         return Math.sqrt(squaredError);
     }
 
-    public static RealMatrix initializeRealMatrix(int numRows, int numCols, double minValue, double maxValue) {
+    public RealMatrix initializeRealMatrix(int numRows, int numCols, double minValue, double maxValue) {
         double[][] matrixData = new double[numRows][numCols];
 
         for (int i = 0; i < numRows; i++) {
@@ -193,7 +349,7 @@ public class MatrixFactorization {
     }
 
     // multiply the matrices back to the R matrix according to the wights
-    private static RealMatrix multiplyMatrices(RealMatrix matrixA, RealMatrix matrixB) {
+    private RealMatrix multiplyRealMatrices(RealMatrix matrixA, RealMatrix matrixB) {
         if (matrixA.getColumnDimension() != matrixB.getRowDimension()) {
             throw new IllegalArgumentException("Invalid matrix dimensions for multiplication");
         }
@@ -201,7 +357,29 @@ public class MatrixFactorization {
         return matrixA.multiply(matrixB);
     }
 
-    private static RealMatrix convertToRealMatrix(double[][] doubleMatrix) {
+    private double[][] multiplyMatrices(double[][] matrixA, double[][] matrixB) {
+        int aRows = matrixA.length;
+        int aCols = matrixA[0].length;
+        int bCols = matrixB[0].length;
+
+        if (aCols != matrixB.length) {
+            throw new IllegalArgumentException("Invalid matrix dimensions for multiplication");
+        }
+
+        double[][] result = new double[aRows][bCols];
+
+        for (int i = 0; i < aRows; i++) {
+            for (int j = 0; j < bCols; j++) {
+                for (int k = 0; k < aCols; k++) {
+                    result[i][j] += matrixA[i][k] * matrixB[k][j];
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private RealMatrix convertToRealMatrix(double[][] doubleMatrix) {
         int rows = doubleMatrix.length;
         int cols = doubleMatrix[0].length;
 
@@ -216,7 +394,7 @@ public class MatrixFactorization {
         return realMatrix;
     }
 
-    private static double[][] convertToDoubleArray(RealMatrix realMatrix) {
+    private double[][] convertToDoubleArray(RealMatrix realMatrix) {
         int rows = realMatrix.getRowDimension();
         int cols = realMatrix.getColumnDimension();
 
@@ -251,7 +429,7 @@ public class MatrixFactorization {
     // double[] predictedRow = {1.0, 2.0, 3.0};
     // System.out.println(calculateRowRMSE(actualRow,predictedRow));*
 
-    private static double calculateRowRMSE(double[] actualRow, double[] predictedRow) {
+    private double calculateRowRMSE(double[] actualRow, double[] predictedRow) {
         int numColumns = actualRow.length;
 
         double sumSquaredDiff = 0.0;
@@ -267,7 +445,7 @@ public class MatrixFactorization {
         return rmse;
     }
 
-    public static double calculateRMSE(double[][] predicted, double[][] actual) {
+    public double calculateRMSE(double[][] predicted, double[][] actual) {
         // Ensure both matrices have the same dimensions
         if (predicted.length != actual.length || predicted[0].length != actual[0].length) {
             throw new IllegalArgumentException("Matrices must have the same dimensions");
