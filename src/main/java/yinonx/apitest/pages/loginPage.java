@@ -3,6 +3,7 @@ package yinonx.apitest.pages;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.spring.scopes.VaadinSessionScope;
+import com.vaadin.flow.theme.Theme;
 
 import yinonx.apitest.classes.User;
 import yinonx.apitest.repos.UserRepository;
@@ -14,10 +15,11 @@ import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.notification.Notification.Position;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-
+//@Theme("my theme")
 @Route(value = "/login")
 public class loginPage extends VerticalLayout {
-
+    
+    private static final String BACKGROUND_IMAGE_URL = "https://images.fineartamerica.com/images/artworkimages/mediumlarge/3/5-video-games-pattern-gaming-console-computer-play-mister-tee.jpg";
     private LoginForm loginForm;
     private UserService userService;
 
@@ -27,17 +29,22 @@ public class loginPage extends VerticalLayout {
        
         this.userService = userService;
 
+        getElement().getStyle().set("background", "url(" + BACKGROUND_IMAGE_URL + ")");
+        getElement().getStyle().set("background-pedding", "0px");
         add(new H1("log in"));
         loginForm = new LoginForm();
+        //<theme-editor-local-classname>
+        loginForm.addClassName("login-page-login-form-1");
         // center loginForm
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
-
         loginForm.addLoginListener(e -> checkLogin(e.getUsername(), e.getPassword()));
 
         add(loginForm);
-      
+        //<theme-editor-local-classname>
+        addClassName("login-page-vertical-layout-1");
+
         
     }
 

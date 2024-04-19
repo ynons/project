@@ -11,6 +11,8 @@ public class User {
 
 @Id
 private long id;
+private String un;
+private String pw;
 private List<Game> playedGames;
 private List<Game> interastingGames;
 public List<Game> getInterastingGames() {
@@ -28,8 +30,7 @@ public List<Game> getPlayedGames() {
 public void setPlayedGames(List<Game> playedGames) {
     this.playedGames = playedGames;
 }
-private String un;
-private String pw;
+
 
 public User() {
 }
@@ -40,6 +41,14 @@ public User(long id, String un, String pw, List<Game> playedGames) {
     this.pw = pw;
     this.playedGames = playedGames;
 }
+
+public User(long id,String un,String pw)
+{
+    this.id = id;
+    this.un = un;
+    this.pw = pw;
+}
+
 public void addGame(Game game) {
 
    if (playedGames!=null) {

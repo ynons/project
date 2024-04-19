@@ -18,14 +18,33 @@ public class UserService
 {
    private GamesService gamesService;
    private UserRepository userRepo;
+   private CsvService csvService;
 
-   public UserService(UserRepository userRepo,GamesService gamesService)
+   public UserService(UserRepository userRepo,GamesService gamesService,CsvService csvCervice )
    {
+      this.csvService = csvCervice;
       this.userRepo = userRepo;
       this.gamesService = gamesService;
    }
 
-   
+
+   /**
+    * Creates a new user with the given username and password.
+    *does not add it to the database, but only create and returns a user with a legal ID
+    *
+    * @param  username   the username of the new user
+    * @param  passward   the password of the new user
+    * @return           the newly created user
+    */
+   public User createUserWithId(String username, String passward)
+   {
+      User user = new User(getIdForNewUser(),username,passward);
+      return user;
+   }
+   public long getIdForNewUser()
+   {
+      return csvService.getIdForNewUser();
+   }
    public boolean addUser(User user)
    {
       try {
@@ -123,6 +142,24 @@ public  void deleteGame(String gameName,String userName) {
  
    Game game = gamesService.getGameDetailsByName(gameName);
    curUser.removeGame(game);
+}
+
+
+/**
+ * Checks if the password is valid based on its length.
+ * passeard is valid if its length is greater than or equal to 3
+ * validates the password
+ *
+ * @param  passward   the password to be checked
+ * @return            true if the password length is greater than or equal to 3, false otherwise
+ */
+public boolean pwIsValid(String passward) 
+{
+   if(passward.length()<3)
+   {
+      return false;
+   }
+   return true;
 }
 
 }

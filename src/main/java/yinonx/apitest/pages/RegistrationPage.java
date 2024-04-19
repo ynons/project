@@ -40,6 +40,7 @@ public class RegistrationPage extends VerticalLayout {
 
     private Button submitButton;
 
+    
     public RegistrationPage(UserService userService)
 
     {
@@ -51,7 +52,7 @@ public class RegistrationPage extends VerticalLayout {
 
         title = new H3("Signup form");
         title.getStyle().setPadding("20px");
-        
+
         userName = new TextField("User name");
 
         userName.getStyle().setPadding("5px");
@@ -59,6 +60,7 @@ public class RegistrationPage extends VerticalLayout {
         allowMarketing = new Checkbox("useless checkbox?");
         allowMarketing.getStyle().set("margin-top", "10px");
 
+       
         password = new PasswordField("Password");
         passwordConfirm = new PasswordField("Confirm password");
 
@@ -83,52 +85,43 @@ public class RegistrationPage extends VerticalLayout {
 
     }
 
-   private void registerInDataBase(String passward, String confirmPassward, String userName) {
-        if(passward!=null && confirmPassward!=null && userName!=null)
-        {
-            if(passward.equals(confirmPassward))
-            {
-
+    private void registerInDataBase(String password, String confirmPassword, String userName) {
+        if (password != null && confirmPassword != null && userName != null && password != "" && confirmPassword != ""
+                && userName != "") {
+            if (password.length() >= 3) {
+                if (password.equals(confirmPassword)) {
                     User user = new User();
                     user.setUn(userName);
-                    user.setPw(passward);
+                    user.setPw(password);
                     user.setId(generateRandomLong());
-                    if (userService.addUser(user)){
-                    UI.getCurrent().getSession().setAttribute("username", userName);
-                    UI.getCurrent().navigate(gamePage.class);
-                    } 
-                    else{Notification.show("failed to register");}
+                    if (userService.addUser(user)) {
+                        UI.getCurrent().getSession().setAttribute("username", userName);
+                        UI.getCurrent().navigate(gamePage.class);
+                    } else {
+                        Notification.show("Failed to register. Please try again later.");
+                    }
+                } else {
+                    Notification.show("Passwords do not match. Please re-enter passwords.");
+                }
+            } else {
+                Notification.show("Password is invalid. It must contain at least 3 characters.");
             }
+        } else {
+            Notification.show("Please enter all fields.");
         }
-
-        
     }
-   //recursive, may not work as data gets bigger
-    // public long generateRandomLong() {
-    //     // Create an instance of the Random class
-    //     Random random = new Random();
-
-    //     // Generate a random long using nextLong() method
-    //     long randomLong = random.nextLong();
-    //    if( userService.findUserById(randomLong) == null)
-    //    {
-    //     return randomLong;
-    //    }
-    //    randomLong = generateRandomLong();
-    //    return randomLong;
-       
-    // }
+    
     public long generateRandomLong() {
         Random random = new Random();
         long randomLong;
-    
+
         do {
             randomLong = random.nextLong();
         } while (userService.findUserById(randomLong) != null);
-    
+
         return randomLong;
     }
-    
+
     public PasswordField getPasswordField() {
         return password;
     }

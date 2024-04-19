@@ -12,8 +12,10 @@ import org.springframework.stereotype.Service;
 
 import yinonx.apitest.services.CsvService;
 
+import java.io.BufferedReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Paths;
 import java.nio.file.Path;
 
@@ -28,51 +30,44 @@ public class MatrixFactorization {
     }
 
     // technicly the main function to call for NOW
-    public void getMatrixFromCsv() {
+    public void factorizeMatrix() throws IOException {
         int minValue = 0;
-        int maxValue = 1;
-        int numFactors = 100;
-        int numberOfSteps = 9000;
-        int numOfEpochs = 10;
+        int maxValue = 5;
+        int numFactors = 0;
+        int numberOfSteps = 10000;
         double RegularizationTerm = 0.01;
-        double rateOflernigng = 0.00000001;
-        // get the matrix from the CSV file
-        // double[][] matrix = csvService.getMatrix();
-        double[][] matrix = csvService.getMatrix();
-
-        // System.out.println("the matrix R");
-        // csvService.printMatrix(matrix);
-        // System.out.println("the predicted matrix:");
-        double[][] predictedMatrix = matrixFactorization(matrix, numFactors, minValue, maxValue, numberOfSteps,numOfEpochs, numFactors, RegularizationTerm, rateOflernigng);
-        // System.out.println("the predicted matrix:");
-        // printMatrix(predictedMatrix);
-        // System.out.println("the original matrix:");
-        // printMatrix(matrix);
-        // matrixFactorization(matrix, numFactors, 1, 10, 500);
-    }
-
-    public static void printMatrix(double[][] matrix) {
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                System.out.print(matrix[i][j] + "\t");
-            }
-            System.out.println();
-        }
+        double rateOflernigng = 0.000001;
+        double[][] matrix = generateMatrix(200);
+        numFactors = matrix.length;
+        double[][] predictedMatrix = matrixFactorization(matrix, numFactors, minValue, maxValue, numberOfSteps, numFactors, RegularizationTerm, rateOflernigng);
+        csvService.writeArrayToCSV(predictedMatrix);
+        runPythonScript("C:\\Users\\ynon\\Downloads\\import_matplotlib.py");
     }
     //my matrix factorization function. all the rest are used as refrence
-
-    private double[][] matrixFactorization(double[][] matrix, int numFactors, int minValue, int maxValue, int steps,
-            int epochs, int numOfFactors, double regTerm, double learningRate) {
+    public  double[][] generateMatrix(int n) {
+        double[][] matrix = new double[n][n];
+        Random rand = new Random();
+        
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                matrix[i][j] = rand.nextDouble() * 5; // Generates a random double between 0 and 5
+            }
+        }
+        
+        return matrix;
+    }
+    private double[][] matrixFactorization(double[][] matrix, int numFactors, int minValue, int maxValue, int steps, int numOfFactors, double regTerm, double learningRate) {
         // intililze two random matrices in the appropriate size
         double[][] userMatrix = initializeMatrix(matrix[0].length, numFactors, minValue, maxValue);
         double[][] itemMatrix = initializeMatrix(numFactors, matrix.length, minValue, maxValue);
+        double prevRMSE = Double.MAX_VALUE;
+        int errorCount=0;
         // set error to max value so that it will enter the loop on first go
         // create a list to store all errors in. will be turned into a grpah later, use
         // to evaluate the
         // working of the model
         double error = Double.MAX_VALUE;
         List<Double> doubleList = new ArrayList<>();
-        double errorSum = 0;
 
         // loop over the original matrix times that are specfied in the dunction
         // parameters(aka steps)
@@ -87,9 +82,11 @@ public class MatrixFactorization {
                     // if there is an entery in matrix R aka if user has played that game
                     if (matrix[i][j] != 0) {
                         // get the prediction of the currnt cell
+                       // System.out.println("debugging"+dotProduct(getRowOfMtrix(userMatrix, i), getColomnOFMatrix(itemMatrix, j)));
                         double dotProduct = dotProduct(getRowOfMtrix(userMatrix, i), getColomnOFMatrix(itemMatrix, j));
                         // calculate the mean squared error of the prediction reletive to the actual
                         // value
+                        //System.out.println("the dot product is : " + dotProduct);
                         error = Math.pow(matrix[i][j] - dotProduct, 2);
 
                         // for each k value in the matrices U and V
@@ -102,60 +99,73 @@ public class MatrixFactorization {
                             double Istep = -2 * ((matrix[i][j] - dotProduct) * (userMatrix[k][j]));
                             Istep = flipSign(Istep);
                             itemMatrix[j][k] += Istep * learningRate;
-                            //System.out.println("the steps taken are: " + Istep * learningRate + " and " + learningRate * Ustep);
+                         //   System.out.println("the steps taken are: " + Istep * learningRate + " and " + learningRate * Ustep);
                         }
 
                     }
                 }
 
             }
-            int errorCount=0;
-            double e = 0;
+            
+            
+            double prediction;
+            double sumSquaredErrors = 0;
+
             for (int x = 0; x < matrix.length; x++) {
                 for (int y = 0; y < matrix[0].length; y++) {
-                    if (matrix[x][y] > 0) {
+                    if (matrix[x][y] != 0) {
                         errorCount++;
-                        e += Math.pow(matrix[x][y]- dotProduct(getColomnOFMatrix(userMatrix, x), getRowOfMtrix(itemMatrix, y)),2);
+                        prediction = dotProduct(getColomnOFMatrix(userMatrix, x), getRowOfMtrix(itemMatrix, y));
+                        double e = matrix[x][y]-prediction;
+                        sumSquaredErrors += e*e;
+                       
                     }
                 }
             }
-            e=e/errorCount;
-            e=Math.sqrt(e);
-            doubleList.add(e);
-            System.out.println("the error is: " + e+"\n and the step is :" + step) ;
-            if (e < 0.1) {
-                System.out.println("error has reaced a minimum value of: " + e);
+            double rmse = Math.sqrt(sumSquaredErrors / errorCount);
+            doubleList.add(rmse);
+
+
+            System.out.println("the error is: " + rmse+"\n and the step is :" + step) ;
+            if (rmse < 0.1) {
+                System.out.println("error has reaced a minimum value of: " + rmse);
                 System.out.println("and it took " + step + " itarations to reach this value");
                 break;
             }
+            if (step > 0) {
+                rmse = Math.sqrt(sumSquaredErrors / errorCount);
+                if (rmse > prevRMSE) {
+                    System.out.println("RMSE started to rise. Stopping training...");
+                    break;
+                }
+                prevRMSE = rmse;
+            }
 
         }
-        //
-        // double [][]eR = multiplyMatrices(userMatrix, itemMatrix);
-
-        //
 
         String csvName = "data.csv";
         String directory = "C:\\Users\\ynon\\Documents\\testing";
         writeToCSV(doubleList, directory, csvName);
 
-        // Print the resulting matrices
-        // System.out.println("the item matrix came out to :");
-        // printMatrix(itemMatrix);
-        // System.out.println("the user matrix came out to :");
-        // printMatrix(userMatrix);
-        // // System.out.println("the predicted R came out too");
-        return predictR(userMatrix, itemMatrix);
+        double [][] predictR = predictR(userMatrix, itemMatrix);
+
+        return predictR;
+    
+    }
+    
+    public static void printMatrix(double[][] matrix) {
+        for (int i = 0; i < matrix.length; i++) {
+            for (int j = 0; j < matrix[i].length; j++) {
+                System.out.print(matrix[i][j] + "\t");
+            }
+            System.out.println();
+        }
     }
 
     public double flipSign(double number) {
         return -number;
     }
 
-    private double sloape(double error) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'sloape'");
-    }
 
     private double[] getRowOfMtrix(double[][] u, int row) {
         double[] firstRow = u[row];
@@ -171,65 +181,6 @@ public class MatrixFactorization {
         return Column;
     }
 
-    private double predictRating(double[] userMatrix, double[] itemMatrix) {
-        if (userMatrix.length != itemMatrix.length) {
-            return -1;
-        }
-
-        double predictRating = 0;
-        for (int i = 0; i < itemMatrix.length; i++) {
-            predictRating = predictRating + userMatrix[i] * itemMatrix[i];
-        }
-        return predictRating;
-    }
-
-    // // Calculate error and check for convergence
-    // double error = calculateError(R, P, Q, beta);
-    // if (error < 0.001) {
-    // break;
-    // }
-    // }
-    // }
-    private void matrixFactorization(double[][] R, double[][] P, double[][] Q, int K) {
-
-        int steps = 5000; // Maximum number of steps allowd for the algorithem,
-        double alpha = 0.0002; // Learning rate, the size of steps taken for twiking the wights
-        double beta = 0.02; // Regularization parameter, use to prevent over fitting, higher = less fitting
-        int h = 0;
-
-        for (int step = 0; step < steps; step++) {
-            System.out.println("factorizing matrix step: " + step + "out of " + steps);
-            for (int i = 0; i < R.length; i++) {
-                System.out.println("intirating over matrix R row number " + i);
-                for (int j = 0; j < R[0].length; j++) {
-                    System.out.println("itirating over matrix R colomn number" + j);
-                    if (R[i][j] > 0) {
-                        System.out.println("found a value that is not missign");
-                        // error in [i][j]
-                        double eij = R[i][j] - dotProduct(P[i], Q[j]);
-                        System.out.println("caculated the error for place I J ");
-                        for (int k = 0; k < K; k++) {
-                            System.out.println("updating wight time " + h);
-                            h++;
-                            System.out.print("step size is " + P[i][k] + alpha * (2 * eij * Q[j][k] - beta * P[i][k]));
-                            P[i][k] = P[i][k] + alpha * (2 * eij * Q[j][k] - beta * P[i][k]);
-                            Q[j][k] = Q[j][k] + alpha * (2 * eij * P[i][k] - beta * Q[j][k]);
-                        }
-                    }
-                }
-            }
-
-            // Calculate error and check for convergence
-            double error = calculateError(R, P, Q, beta);
-            if (error < 0.1) {
-                break;
-            }
-        }
-    }
-
-    private double getError(double actual, double predicted) {
-        return Math.pow(actual - predicted, 2);
-    }
 
     public double[][] predictR(double[][] U, double[][] P) {
         int numUsers = U.length;
@@ -245,6 +196,30 @@ public class MatrixFactorization {
 
         return predictedR;
     }
+    public void runPythonScript(String pythonScriptPath) {
+        try {
+            Process process = Runtime.getRuntime().exec("python " + pythonScriptPath);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+
+            process.waitFor();
+
+            int exitValue = process.exitValue();
+            if (exitValue == 0) {
+                System.out.println("Python script executed successfully.");
+            } else {
+                System.out.println("Python script execution failed with error code: " + exitValue);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     public void writeToCSV(List<Double> dataList, String directory, String fileName) {
         FileWriter fileWriter = null;
@@ -323,9 +298,7 @@ public class MatrixFactorization {
         return matrix;
     }
 
-    private void updateWights(double[][] user, double[][] item, double error, double lerningRate) {
-
-    }
+    
 
     public double calculateRMSE(double actual, double predicted) {
         // Calculate the squared error
@@ -407,42 +380,6 @@ public class MatrixFactorization {
         }
 
         return doubleMatrix;
-    }
-
-    private RealMatrix getU(SingularValueDecomposition currentSvd) {
-        return currentSvd.getU();
-    }
-
-    private RealMatrix getV(SingularValueDecomposition currentSvd) {
-        return currentSvd.getV();
-    }
-
-    private RealMatrix getS(SingularValueDecomposition currentSvd) {
-        return MatrixUtils.createRealDiagonalMatrix(currentSvd.getSingularValues());
-    }
-    // 進行中の作業
-    // this function calculate the RMSE of two rows
-    // it will get the predicted data as well as the real data in the form of two
-    // arrays and return a double value representetive of the diffrence
-    // exmple usage
-    // *double[] actualRow = {1.0, 2.0, 3.0};
-    // double[] predictedRow = {1.0, 2.0, 3.0};
-    // System.out.println(calculateRowRMSE(actualRow,predictedRow));*
-
-    private double calculateRowRMSE(double[] actualRow, double[] predictedRow) {
-        int numColumns = actualRow.length;
-
-        double sumSquaredDiff = 0.0;
-
-        for (int i = 0; i < numColumns; i++) {
-            double diff = actualRow[i] - predictedRow[i];
-            sumSquaredDiff += Math.pow(diff, 2);
-        }
-
-        double meanSquaredDiff = sumSquaredDiff / numColumns;
-        double rmse = Math.sqrt(meanSquaredDiff);
-
-        return rmse;
     }
 
     public double calculateRMSE(double[][] predicted, double[][] actual) {

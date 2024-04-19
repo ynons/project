@@ -1,5 +1,6 @@
 package yinonx.apitest.pages;
 
+import java.awt.Color;
 import java.util.Date;
 
 import com.vaadin.flow.component.Text;
@@ -8,6 +9,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.H3;
+import com.vaadin.flow.component.html.H4;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,12 +26,15 @@ public class conectionPage extends VerticalLayout{
     {
         System.out.println("start conectionPage=====>>>>");
 
-        add(new H2("Conection Page"));
-
+        add(new H2("welcome to YourGamesList.com"));
+        add(new H4("the best site for tracking the games you own. and discover new games to play. "));    
+        
         sessionId = VaadinSession.getCurrent().getSession().getId();
         userName = (String)VaadinSession.getCurrent().getSession().getAttribute("userName");
+        
+        
+      
 
-       
         Image imageLogo = new Image(IMAGE_LOGO_URL, "logo");
         imageLogo.setHeight("280px");
 
@@ -40,11 +45,11 @@ public class conectionPage extends VerticalLayout{
         Button btnRegister = new Button("Register", e -> register());
 
         heder.add(btnLogIn, btnRegister);
-
         add(new Text(new Date()+""));
         add(imageLogo);
-        add(new H1("Welcome Gest"));
-        add(new H3("( sessionId: "+sessionId+")"));
+        add(new H1("Welcome guest"));
+        add(new H3("our site uses an advence algorithem to find the best games for you. to start please log in or register if you don't have an account with us. "));
+       // add(new H3("( sessionId: "+sessionId+")"));
         add(heder);
 
         setAlignItems(Alignment.CENTER);
