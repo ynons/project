@@ -57,7 +57,7 @@ public class RegistrationPage extends VerticalLayout {
 
         userName.getStyle().setPadding("5px");
 
-        allowMarketing = new Checkbox("useless checkbox?");
+        allowMarketing = new Checkbox("by registering you are agreeing to our privacy policy");
         allowMarketing.getStyle().set("margin-top", "10px");
 
        
@@ -86,6 +86,11 @@ public class RegistrationPage extends VerticalLayout {
     }
 
     private void registerInDataBase(String password, String confirmPassword, String userName) {
+      if(allowMarketing.getValue()!=true)
+      {
+          Notification.show("you have to agree to our privecy policy to continue");
+          return;
+      }
         if (password != null && confirmPassword != null && userName != null && password != "" && confirmPassword != ""
                 && userName != "") {
             if (password.length() >= 3) {

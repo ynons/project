@@ -10,6 +10,7 @@ import yinonx.apitest.repos.UserRepository;
 import yinonx.apitest.services.UserService;
 
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.notification.Notification;
@@ -28,7 +29,14 @@ public class loginPage extends VerticalLayout {
              
        
         this.userService = userService;
-
+        Button registerBotton = new Button("register");
+        //<theme-editor-local-classname>
+        registerBotton.addClassName("login-page-button-1");
+        registerBotton.getStyle().setBackgroundColor("black");
+        registerBotton.getStyle().setColor("white");
+        registerBotton.addClickListener(e->{
+            UI.getCurrent().navigate(RegistrationPage.class);
+        });
         getElement().getStyle().set("background", "url(" + BACKGROUND_IMAGE_URL + ")");
         getElement().getStyle().set("background-pedding", "0px");
         add(new H1("log in"));
@@ -40,8 +48,7 @@ public class loginPage extends VerticalLayout {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
         loginForm.addLoginListener(e -> checkLogin(e.getUsername(), e.getPassword()));
-
-        add(loginForm);
+        add(loginForm,registerBotton);
         //<theme-editor-local-classname>
         addClassName("login-page-vertical-layout-1");
 
@@ -58,7 +65,8 @@ public class loginPage extends VerticalLayout {
             UI.getCurrent().navigate(gamePage.class);
     }
       else{     
-           Notification.show("No user by the name "+ username + " was found", 3000, Position.TOP_CENTER);
+           Notification.show("incorrect username or password. please try again. if you do not have an accout with us you may sign up with the register bottom", 3000, Position.TOP_CENTER);
+           loginForm.setEnabled(true);
     }
 }
 
