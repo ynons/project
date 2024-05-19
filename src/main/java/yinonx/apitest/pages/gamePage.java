@@ -30,9 +30,9 @@ import com.vaadin.flow.server.VaadinSession;
 import com.vaadin.flow.shared.Registration;
 import yinonx.apitest.classes.Game;
 import yinonx.apitest.classes.User;
-import yinonx.apitest.matrixTest.MatrixFactorization;
 import yinonx.apitest.services.CsvService;
 import yinonx.apitest.services.GamesService;
+import yinonx.apitest.services.MatrixFactorization;
 import yinonx.apitest.services.UserService;
 
 @Route(value = "/game")
