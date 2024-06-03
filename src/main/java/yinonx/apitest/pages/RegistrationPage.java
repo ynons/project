@@ -49,14 +49,16 @@ public class RegistrationPage extends VerticalLayout {
         container.getStyle().set("margin", "auto");
         container.getStyle().set("margin-top", "50px"); // Adjust top margin as needed
         container.getStyle().setPadding("20px"); // Adjust top margin as needed
-
+        Button navigateToLoginButton = new Button("Already have an account? Login", event -> {
+            UI.getCurrent().navigate(loginPage.class);
+        });
         title = new H3("Signup form");
         title.getStyle().setPadding("20px");
 
         userName = new TextField("User name");
 
         userName.getStyle().setPadding("5px");
-
+        
         allowMarketing = new Checkbox("by registering you are agreeing to our privacy policy");
         allowMarketing.getStyle().set("margin-top", "10px");
 
@@ -71,10 +73,10 @@ public class RegistrationPage extends VerticalLayout {
 
         submitButton = new Button("Join the community");
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
+        
         container.add(title, userName, password,
                 passwordConfirm, allowMarketing, errorMessageField,
-                submitButton);
+                submitButton, navigateToLoginButton);
 
         add(container);
         // Max width of the Form

@@ -5,6 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import yinonx.apitest.classes.Game;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,9 +22,12 @@ public class GamesService {
         this.rawgApiService = rawgApiService;
         gameFromQueryGame = new Game();
     }
-
+    public static List<Game> removeDuplicateGames(List<Game> games) {
+        Set<Game> gameSet = new HashSet<>(games);
+        return new ArrayList<>(gameSet);
+    }
     public Game getGameDetailsByName(String name) {
-        System.out.println("Searching for a game by the name of: " + name + " in the database");
+      //  System.out.println("Searching for a game by the name of: " + name + " in the database");
         String json = rawgApiService.searchGame(name);
 
         gameFromQueryGame = parseJsonToGame(json);

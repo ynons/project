@@ -163,6 +163,8 @@ public class gamePage extends VerticalLayout {
         Div yourGamesDiv2 = new Div(inputTextField, searchBotton);
         Div yourGamesDiv1 = new Div(gameTimeInputField, addToPlayedGames);
 
+        // gameNameTextField.add(e -> System.out.println(inputTextField.getValue() + ""));
+
         Div span1 = new Div(gameNamelSpan, gameNameTextField);
         Div span2 = new Div(gameRatingSpan, gameRatingTextField);
         Div span3 = new Div(gameReleaseDateSpan, gameReleaseDateTextField);
@@ -172,7 +174,7 @@ public class gamePage extends VerticalLayout {
         
         });
         recommendedGameGrid.setColumnRendering(ColumnRendering.EAGER);
-        recommendedGameGrid.setItems(userService.findUserByUn("yinon").getGames());
+        //recommendedGameGrid.setItems(userService.findUserByUn("yinon").getGames());
 
         addToPlayedGames.addClickListener(e->{
             AddGameToUser(gameNameTextField.getValue(), gameTimeInputField.getValue() ,loggedInUser);
@@ -205,55 +207,31 @@ public class gamePage extends VerticalLayout {
 
     private boolean AddGameToUser(String gameName, String playtimeString, String userName) {
         System.out.println("adding game to user");
-        int playtime = 0;
-        User currentUser = null;
-        Game currentGame = null;
     
         if (!isValidPlaytime(playtimeString)) {
             Notification.show("Invalid play time");
             return false;
         }
-        if (!isValidGameName(gameName)) {
-            Notification.show("Invalid game name");
-            return false;
-        }
+        // if (!isValidGameName(gameName)) {
+        //     Notification.show("Invalid game name");
+        //     return false;
+        // }
     
-        try {
-            currentUser = userService.findUserByUn(userName);
-        } catch (Exception e) {
-            Notification.show("User is not in the database, try to login again");
-            return false;
-        }
-    
-        try {
-            currentGame = gamesService.getGameDetailsByName(gameName);
-            if (currentUser.getPlayedGames().contains(currentGame)) {
-                Notification.show("Game is already in the user's list of played games");
-                return false;
-            }
-            currentGame.setPlayTime(playtime);
-        } catch (Exception e) {
-            Notification.show("Game is not in the API's database");
-            return false;
-        }
-    
-        try {
-            currentUser.addGame(currentGame);
-            userService.UpdateUser(currentUser);
-        } catch (Exception e) {
-            Notification.show("Couldn't add game to user, please try again");
-            return false;
-        }
-    
-        Notification.show("The game " + currentGame.getName() + " was added to the user " + currentUser.getUn()
-                + "'s played games list");
+        System.out.println("adding game to user");
+        boolean res = userService.addGameToUser(gameName,userName, Integer.parseInt(playtimeString));
         populateGridWithUserGames(userName);
-        return true;
+        if (res==false) {
+            Notification.show("the game has falied to add, make sure the gmae is not already in your played games list and try again"); 
+        }
+        else {
+            Notification.show("the game has been added to your played games list");
+        }
+        return res;
     }
     
 
     private boolean isValidGameName(String name) {
-        if (name == null || name.isEmpty()) {
+        if (name == null || name == "") {
             Notification.show("please enter a valid game name");
             return false;
         }

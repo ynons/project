@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.springframework.stereotype.Service;
 
 import com.opencsv.CSVReader;
@@ -213,12 +214,16 @@ public class CsvService {
     }
 
     public long getIdForNewUser() {
-        try {
-            return getLastCellValue();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return -1;
-        }
+        
+             RandomDataGenerator randomDataGenerator = new RandomDataGenerator();
+        
+        // Generate a random number in the range [1000000000, 9999999999]
+        long min = 1000000000L;  // 10-digit number starts from 1000000000
+        long max = 9999999999L;  // 10-digit number ends at 9999999999
+        
+        long randomNumber = randomDataGenerator.nextLong(min, max);
+            return randomNumber;
+        
 
     }
 

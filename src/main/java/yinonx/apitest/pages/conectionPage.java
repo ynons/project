@@ -27,7 +27,7 @@ public class conectionPage extends VerticalLayout{
         System.out.println("start conectionPage=====>>>>");
 
         add(new H2("welcome to YourGamesList.com"));
-        add(new H4("the best site for tracking the games you own. and discover new games to play. "));    
+        add(new H4("the best site for tracking the games you own. and dicovering new games to play. "));    
         
         sessionId = VaadinSession.getCurrent().getSession().getId();
         userName = (String)VaadinSession.getCurrent().getSession().getAttribute("userName");

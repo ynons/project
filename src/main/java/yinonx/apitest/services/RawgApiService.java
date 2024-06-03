@@ -54,7 +54,8 @@ public static String getGameDetails(String gameName) {
         return jsonResponse;
     }
 
-    public String searchGame(String gameName) {        System.out.println("succsusfully got game from the database api");
+    public String searchGame(String gameName) {     
+        //   System.out.println("succsusfully got game from the database api");
         // Call the function
         return getGameDetails(gameName);
         

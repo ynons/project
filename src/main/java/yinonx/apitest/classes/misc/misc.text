@@ -1,0 +1,56 @@
+a place to put unused code that may come in handy in the future
+code to generte users form the steam csv file
+public void importUsersFromCSV(String filePath) {
+        try (FileReader reader = new FileReader(filePath);
+             CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT.withFirstRecordAsHeader())) {
+             
+            for (CSVRecord record : csvParser) {
+                int gamesPlayedCount = 0;
+    
+                // Calculate games played count
+                for (int i = 1; i < record.size(); i++) {
+                    String playTimeStr = record.get(i);
+                    if (playTimeStr != null && !playTimeStr.isEmpty()) {
+                        int playTime = (int) Math.round(Double.parseDouble(playTimeStr));
+                        if (playTime > 0) {
+                            gamesPlayedCount++;
+                        }
+                    }
+                }
+    
+                if (gamesPlayedCount >= 6) {
+                    String username = record.get(0); // Assuming the first column contains the username
+                    String password = generateRandomPassword(); // Generate a random password
+    
+                    User user = userService.createUserWithId(username, password);
+    
+                    // Initialize games list
+                    List<Game> games = new ArrayList<>();
+    
+                    // Start from index 1 to skip the username column
+                    for (int i = 1; i < record.size(); i++) {
+                        String gameName = csvParser.getHeaderNames().get(i); // Get the game name from headers
+                        String playTimeStr = record.get(i);
+    
+                        if (playTimeStr != null && !playTimeStr.isEmpty()) {
+                            int playTime = (int) Math.round(Double.parseDouble(playTimeStr));
+                            if (playTime > 0) {
+                                Game game = gamesService.getGameDetailsByName(gameName);
+                                games.add(game);
+                            }
+                        }
+                    }
+    
+                    user.setGames(games);
+                    userService.addUser(user);
+    
+                    // Print username and number of games played
+                    System.out.println("User added: " + username + ", Games played: " + games.size());
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace(); // or use a logger to log the exception
+        } catch (NumberFormatException e) {
+            e.printStackTrace(); // or use a logger to log the exception
+        }
+    }
